@@ -1,0 +1,3 @@
+class MonitoringRepository {
+  const MonitoringRepository();
+}
