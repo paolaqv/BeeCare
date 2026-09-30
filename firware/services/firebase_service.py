@@ -1,45 +1,151 @@
-from machine import Pin
-import dht
+import json
+
+try:
+    import urequests as requests
+except ImportError:
+    import requests
+
+from firmware.config import (
+    FIREBASE_API_KEY,
+    FIREBASE_DATABASE_URL,
+    FIREBASE_EMAIL,
+    FIREBASE_PASSWORD
+)
 
 
-class ClimateSensor:
-    def __init__(self, pin, sensor_id, location, sensor_type):
-        self.sensor_id = sensor_id
-        self.location = location
-        self.sensor_type = sensor_type
+class ServicioFirebase:
 
-        if sensor_type == "DHT22":
-            self.sensor = dht.DHT22(Pin(pin))
+    def __init__(self):
+        self.token_id = None
+        self.token_actualizacion = None
 
-        elif sensor_type == "DHT11":
-            self.sensor = dht.DHT11(Pin(pin))
+    def autenticar(self):
+        url = (
+            "https://identitytoolkit.googleapis.com/v1/"
+            "accounts:signInWithPassword?key="
+            + FIREBASE_API_KEY
+        )
 
-        else:
-            raise ValueError("Tipo de sensor no soportado")
+        datos = {
+            "email": FIREBASE_EMAIL,
+            "password": FIREBASE_PASSWORD,
+            "returnSecureToken": True
+        }
 
-    def read(self):
+        respuesta = None
+
         try:
-            self.sensor.measure()
+            respuesta = requests.post(
+                url,
+                data=json.dumps(datos),
+                headers={
+                    "Content-Type": "application/json"
+                }
+            )
 
-            temperature = self.sensor.temperature()
-            humidity = self.sensor.humidity()
+            if respuesta.status_code == 200:
+                resultado = respuesta.json()
 
-            return {
-                "sensor_id": self.sensor_id,
-                "sensor_type": self.sensor_type,
-                "location": self.location,
-                "temperature": temperature,
-                "humidity": humidity,
-                "status": "ok"
-            }
+                self.token_id = resultado["idToken"]
+                self.token_actualizacion = resultado["refreshToken"]
+
+                print("Autenticacion Firebase correcta")
+                return True
+
+            print("Error Firebase:", respuesta.status_code)
+            print(respuesta.text)
+
+            return False
 
         except Exception as error:
-            return {
-                "sensor_id": self.sensor_id,
-                "sensor_type": self.sensor_type,
-                "location": self.location,
-                "temperature": None,
-                "humidity": None,
-                "status": "error",
-                "error": str(error)
-            }
+            print("Error autenticando Firebase:", error)
+            return False
+
+        finally:
+            if respuesta:
+                respuesta.close()
+
+    def esta_autenticado(self):
+        return self.token_id is not None
+
+    def obtener(self, ruta):
+        if not self.esta_autenticado():
+            print("Firebase no autenticado")
+            return None
+
+        url = (
+            FIREBASE_DATABASE_URL
+            + "/"
+            + ruta
+            + ".json?auth="
+            + self.token_id
+        )
+
+        respuesta = None
+
+        try:
+            respuesta = requests.get(url)
+
+            if respuesta.status_code == 200:
+                return respuesta.json()
+
+            print("Error GET:", respuesta.status_code)
+            print(respuesta.text)
+
+            return None
+
+        except Exception as error:
+            print("Error leyendo Firebase:", error)
+            return None
+
+        finally:
+            if respuesta:
+                respuesta.close()
+
+    def agregar(self, ruta, datos):
+        """
+        POST en Firebase.
+        Firebase genera automáticamente el ID del registro.
+        """
+
+        if not self.esta_autenticado():
+            print("Firebase no autenticado")
+            return None
+
+        url = (
+            FIREBASE_DATABASE_URL
+            + "/"
+            + ruta
+            + ".json?auth="
+            + self.token_id
+        )
+
+        respuesta = None
+
+        try:
+            respuesta = requests.post(
+                url,
+                data=json.dumps(datos),
+                headers={
+                    "Content-Type": "application/json"
+                }
+            )
+
+            if respuesta.status_code == 200:
+                resultado = respuesta.json()
+
+                print("Registro guardado en Firebase")
+                return resultado
+
+            print("Error POST:", respuesta.status_code)
+            print(respuesta.text)
+
+            return None
+
+        except Exception as error:
+            print("Error guardando en Firebase:", error)
+            return None
+
+        finally:
+            if respuesta:
+                respuesta.close()

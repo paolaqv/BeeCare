@@ -2,7 +2,7 @@ from machine import Pin
 import dht
 
 
-class ClimateSensor:
+class SensorClima:
     def __init__(self, pin, sensor_id, location, sensor_type):
         self.sensor_id = sensor_id
         self.location = location
@@ -43,4 +43,3 @@ class ClimateSensor:
                 "status": "error",
                 "error": str(error)
             }
-

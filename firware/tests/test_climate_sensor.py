@@ -1,26 +1,26 @@
 import time
+import sys
+sys.path.append("/firware")
 
-from config import DHT1_PIN, DHT2_PIN
-from config import DHT3_PIN
+from config import DHT1_PIN, DHT2_PIN, DHT3_PIN
 
-from sensors.climate_sensor import ClimateSensor
+from sensors.climate_sensor import SensorClima
 
-
-sensor_1 = ClimateSensor(
+sensor_1 = SensorClima(
     pin=DHT1_PIN,
     sensor_id="S1",
     location="centro_marco_5",
     sensor_type="DHT22"
 )
 
-sensor_2 = ClimateSensor(
+sensor_2 = SensorClima(
     pin=DHT2_PIN,
     sensor_id="S2",
     location="costado_marco_5",
     sensor_type="DHT11"
 )
 
-sensor_3 = ClimateSensor(
+sensor_3 = SensorClima(
     pin=DHT3_PIN,
     sensor_id="S3",
     location="costado_marco_1",
@@ -52,4 +52,5 @@ while True:
 
         print()
 
-    time.sleep(3)
+    time.sleep(10)
+
