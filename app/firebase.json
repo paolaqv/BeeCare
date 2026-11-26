@@ -1,0 +1,18 @@
+{
+  "database": {
+    "rules": "firebase/reglas_base_datos.json"
+  },
+  "functions": [
+    {
+      "source": "firebase/funciones",
+      "codebase": "alertas-beecare",
+      "runtime": "nodejs22",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
+    }
+  ]
+}

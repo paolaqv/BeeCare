@@ -1,0 +1,3 @@
+class RutasFirebase {
+  RutasFirebase._();
+}

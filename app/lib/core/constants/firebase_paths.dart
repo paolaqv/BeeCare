@@ -1,3 +1,0 @@
-class FirebasePaths {
-  FirebasePaths._();
-}

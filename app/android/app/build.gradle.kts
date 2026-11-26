@@ -2,6 +2,14 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services") apply false
+}
+
+val pushEnabled = providers.gradleProperty("dart-defines").orNull
+    ?.split(',')
+    ?.any { it == "UFVTSF9FTkFCTEVEPXRydWU=" } == true // Base64 de PUSH_ENABLED=true.
+if (pushEnabled) {
+    pluginManager.apply("com.google.gms.google-services")
 }
 
 android {
